@@ -1,20 +1,27 @@
 <?php
 header("Content-type: text/xml");
 
+
 set_time_limit(99999999);
 ini_set('memory_limit', '128M');
 
+define('_JEXEC', 1);
+define('APPLICATION_ENV', getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production');
 define('JOOMLA_MINIMUM_PHP', '5.3.10');
 
 if (version_compare(PHP_VERSION, JOOMLA_MINIMUM_PHP, '<')) {
     die('Your host needs to use PHP ' . JOOMLA_MINIMUM_PHP . ' or higher to run this version of Joomla!');
 }
 
-define('_JEXEC', 1);
-define('JPATH_BASE', __DIR__ . '/../');
-
-require JPATH_BASE . '/includes/defines.php';
-require JPATH_BASE . '/includes/framework.php';
+if (APPLICATION_ENV == 'development') {
+    define('JPATH_BASE', '/Users/phil/Sites/www.homeopathy-soh.org');
+    require JPATH_BASE . '/includes/defines.php';
+    require JPATH_BASE . '/includes/framework.php';
+} else {
+    define('JPATH_BASE', realpath(__DIR__ . '/../'));
+    require JPATH_BASE . '/includes/defines.php';
+    require JPATH_BASE . '/includes/framework.php';
+}
 
 final class xmlFeed
 {
@@ -40,9 +47,7 @@ final class xmlFeed
             // reset location
             $this->_location = '';
 
-            /**
-             * Create the member node
-             */
+            // Create the member node
             $this->_doc->getElementsByTagName('id');
             $parent = NULL;
 
@@ -59,7 +64,6 @@ final class xmlFeed
                 $member = $this->_root->appendChild($member);
 
             }
-
 
             // Populate the member node
             foreach ($this->_itemCache as $k => $v) {
@@ -80,6 +84,11 @@ final class xmlFeed
         return $xml_string;
     }
 
+    /**
+     * Get the data from the database
+     * NOTE: WE ARE NOT USING THE address FIELD, but using the intro_desc instead
+     * @return mixed
+     */
     private function getData()
     {
         $db = JFactory::getDbo();
@@ -118,7 +127,7 @@ final class xmlFeed
         $addHere = $member;
 
         switch ($field) {
-            //Convert full_address to a location tag
+            //Convert intro_desc to a location tag
             case 'full_address':
                 $this->splitAndAddLocationToMember($member, $value);
 
@@ -219,8 +228,7 @@ $feed = new xmlFeed();
 file_put_contents('feed.xml', $feed->getOutput());
 
 if (APPLICATION_ENV == 'development') {
-    echo $feed->getOutput();
+    header('Location: http://www.homeopathy-soh.mine/feed/feed.xml?' . time());
 } else {
     header('Location: http://www.homeopathy-soh.org/feed/feed.xml?' . time());
-
 }
