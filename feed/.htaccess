@@ -1,0 +1,14 @@
+## No directory listings
+IndexIgnore *
+
+## Can be commented out if causes errors, see notes above.
+Options +FollowSymlinks
+Options -Indexes
+
+## Mod_rewrite in use.
+
+RewriteEngine On
+
+RewriteCond %{REQUEST_URI} !^/feed/generate\.php
+# internally rewrite the request to the index.php script
+RewriteRule .* feed.xml [L]
